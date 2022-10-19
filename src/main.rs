@@ -1,8 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use rand::prelude::*;
-use eframe::{epi, egui};
+use eframe::{egui};
 
-#[derive(Default)]
 struct PasswordGenerator {
     length: i32,
     lowercase: bool,
@@ -12,27 +11,22 @@ struct PasswordGenerator {
     pwd: String
 }
 
-impl epi::App for PasswordGenerator {
-    fn name(&self) -> &str {
-        "Password Generator"
+impl Default for PasswordGenerator {
+    fn default() -> Self {
+        Self {
+            length: 16,
+            lowercase: true,
+            uppercase: true,
+            numbers: true,
+            symbols: true,
+            pwd: "".to_string()
+        }
     }
+}
 
-    fn setup(
-        &mut self, 
-        _ctx: &egui::Context,
-        frame: &epi::Frame, 
-        _storage: Option<&dyn epi::Storage>
-    ) {
-        frame.set_window_size(egui::Vec2{x:610.0,y:275.0});
-        self.length = 16;
-        self.lowercase = true;
-        self.uppercase = true;
-        self.numbers = true;
-        self.symbols = true;
-    }
-
-    fn update(&mut self, ctx: &egui::Context, _frame: &epi::Frame) {
-        egui::CentralPanel::default().show(ctx, |ui| {
+impl eframe::App for PasswordGenerator {
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        egui::CentralPanel::default().show(ctx, |ui| {  
             ui.heading("Password Generator");
             ui.add(egui::Slider::new(&mut self.length, 2..=128).text("Length"));
             ui.horizontal(|ui| {
@@ -45,7 +39,7 @@ impl epi::App for PasswordGenerator {
             });
             if ui.button("Generate").clicked() {
                 if self.lowercase == false && self.uppercase == false && self.numbers == false && self.symbols == false {
-                    self.pwd = " ".to_string();
+                    self.pwd = "Please select an option...".to_string();
                 } else {
                     self.pwd = pwdgen(self.lowercase, self.uppercase, self.numbers, self.symbols, self.length);
                 }
@@ -57,8 +51,15 @@ impl epi::App for PasswordGenerator {
 
 fn main() {
     let app = PasswordGenerator::default();
-    let native_options = eframe::NativeOptions::default();
-    eframe::run_native(Box::new(app), native_options);
+    let native_options = eframe::NativeOptions {
+        initial_window_size: Some(egui::vec2(300.0, 140.0)),
+        ..Default::default()
+    };
+    eframe::run_native(
+        "Password Generator",
+        native_options,
+        Box::new(|_cc| Box::new(app)),
+    );
 }
 
 fn pwdgen(lowercase: bool, uppercase: bool, numbers: bool, symbols: bool, length: i32) -> String {
